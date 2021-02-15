@@ -1,15 +1,7 @@
-# login-with-twitter [![travis][travis-image]][travis-url] [![npm][npm-image]][npm-url] [![downloads][downloads-image]][downloads-url] [![javascript style guide][standard-image]][standard-url]
+# login-with-twitter (without sessions)
 
-[travis-image]: https://img.shields.io/travis/feross/login-with-twitter/master.svg
-[travis-url]: https://travis-ci.org/feross/login-with-twitter
-[npm-image]: https://img.shields.io/npm/v/login-with-twitter.svg
-[npm-url]: https://npmjs.org/package/login-with-twitter
-[downloads-image]: https://img.shields.io/npm/dm/login-with-twitter.svg
-[downloads-url]: https://npmjs.org/package/login-with-twitter
-[standard-image]: https://img.shields.io/badge/code_style-standard-brightgreen.svg
-[standard-url]: https://standardjs.com
+### the login with twitter api doesn't actually use the secret token during the exchange, making the use of sessions totally redundant. to avoid complicating our existing auth setup, we're going sans sessions.
 
-### Login with Twitter. OAuth without the nonsense.
 
 ## Features
 
@@ -43,7 +35,7 @@ const tw = new LoginWithTwitter({
 
 ### Login
 
-Call `login` from your `/twitter` route, saving the OAuth `tokenSecret` to use later. In this example, we use the request session (using, for example, [express-session](https://www.npmjs.com/package/express-session)).
+Call `login` from your `/twitter` route.
 
 ```js 
 app.get('/twitter', (req, res) => {
@@ -51,9 +43,6 @@ app.get('/twitter', (req, res) => {
     if (err) {
       // Handle the error your way
     }
-    
-    // Save the OAuth token secret for use in your /twitter/callback route
-    req.session.tokenSecret = tokenSecret
     
     // Redirect to the /twitter/callback route, with the OAuth responses as query params
     res.redirect(url)
@@ -63,20 +52,17 @@ app.get('/twitter', (req, res) => {
 
 ### Callback
 
-Then, call `callback` from your `/twitter/callback` route. The request will include `oauth_token` and `oauth_verifier` in the URL, accessible with `req.query`. Pass those into `callback`, along with the OAuth `tokenSecret` you saved in the `login` callback above, and a callback that handles a `user` object that this module will return.
+Then, call `callback` from your `/twitter/callback` route. The request will include `oauth_token` and `oauth_verifier` in the URL, accessible with `req.query`. Pass those into `callback` and a callback that handles a `user` object that this module will return.
 
 ```js
 app.get('/twitter/callback', (req, res) => {
   tw.callback({
     oauth_token: req.query.oauth_token,
     oauth_verifier: req.query.oauth_verifier
-  }, req.session.tokenSecret, (err, user) => {
+  }, (err, user) => {
     if (err) {
       // Handle the error your way
     }
-    
-    // Delete the tokenSecret securely
-    delete req.session.tokenSecret
     
     // The user object contains 4 key/value pairs, which
     // you should store and use as you need, e.g. with your
@@ -88,16 +74,13 @@ app.get('/twitter/callback', (req, res) => {
     //   userToken,
     //   userTokenSecret
     // }
-    req.session.user = user
+    req.user = user
     
     // Redirect to whatever route that can handle your new Twitter login user details!
     res.redirect('/')
   });
 });
 ```
-
-### Logout
-If you want to implement logout, simply delete the `user` object stored in the session.
 
 ---
 
