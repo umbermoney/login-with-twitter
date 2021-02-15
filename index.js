@@ -62,7 +62,6 @@ class LoginWithTwitter {
 
       const {
         oauth_token: token,
-        oauth_token_secret: tokenSecret,
         oauth_callback_confirmed: callbackConfirmed
       } = querystring.parse(data.toString())
 
@@ -74,11 +73,11 @@ class LoginWithTwitter {
       // Redirect visitor to this URL to authorize the app
       const url = `${TW_AUTH_URL}?${querystring.stringify({ oauth_token: token })}`
 
-      cb(null, tokenSecret, url)
+      cb(null, url)
     })
   }
 
-  callback (params, tokenSecret, cb) {
+  callback (params, cb) {
     const {
       oauth_token: token,
       oauth_verifier: verifier
@@ -99,16 +98,12 @@ class LoginWithTwitter {
     if (typeof params.oauth_verifier !== 'string' || params.oauth_verifier.length === 0) {
       return cb(new Error('Invalid or missing `oauth_verifier` parameter for login callback'))
     }
-    if (typeof tokenSecret !== 'string' || tokenSecret.length === 0) {
-      return cb(new Error('Invalid or missing `tokenSecret` argument for login callback'))
-    }
 
     const requestData = {
       url: TW_ACCESS_TOKEN_URL,
       method: 'POST',
       data: {
         oauth_token: token,
-        oauth_token_secret: tokenSecret,
         oauth_verifier: verifier
       }
     }
